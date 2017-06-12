@@ -16,32 +16,29 @@ func NewReader(reader io.Reader, endian binary.ByteOrder) *BinaryReader {
 	return &BinaryReader{reader: bufio.NewReader(reader), endian: endian, err: nil}
 }
 
-func (br *BinaryReader) checkError(f func()) *BinaryReader {
-	if br.err != nil {
-		f()
-	}
-	return br
-}
-
 func (br *BinaryReader) Finish() error {
 	return br.err
 }
 
 func (br *BinaryReader) Byte(b *byte) *BinaryReader {
-	return br.checkError(func() {
-		*b, br.err = br.reader.ReadByte()
-	})
+	if br.err != nil {
+		return br
+	}
+	*b, br.err = br.reader.ReadByte()
+	return br
 }
 
 func (br *BinaryReader) Uint16(i *uint16) *BinaryReader {
-	return br.checkError(func() {
-		bytes := make([]byte, 2)
-		_, err := br.reader.Read(bytes)
-		if err != nil {
-			br.err = err
-		}
-		*i = br.endian.Uint16(bytes)
-	})
+	if br.err != nil {
+		return br
+	}
+	bytes := make([]byte, 2)
+	_, err := br.reader.Read(bytes)
+	if err != nil {
+		br.err = err
+	}
+	*i = br.endian.Uint16(bytes)
+	return br
 }
 
 func (br *BinaryReader) Uint32(i *uint32) *BinaryReader {
@@ -60,23 +57,27 @@ func (br *BinaryReader) Uint32(i *uint32) *BinaryReader {
 }
 
 func (br *BinaryReader) Uint64(i *uint64) *BinaryReader {
-	return br.checkError(func() {
-		bytes := make([]byte, 4)
-		_, err := br.reader.ReadBytes(8)
-		if err != nil {
-			br.err = err
-		}
-		*i = br.endian.Uint64(bytes)
-	})
+	if br.err != nil {
+		return br
+	}
+	bytes := make([]byte, 4)
+	_, err := br.reader.ReadBytes(8)
+	if err != nil {
+		br.err = err
+	}
+	*i = br.endian.Uint64(bytes)
+	return br
 }
 
 func (br *BinaryReader) String(i uint16, str *string) *BinaryReader {
-	return br.checkError(func() {
-		bytes := make([]byte, 4)
-		_, err := br.reader.Read(bytes)
-		if err != nil {
-			br.err = err
-		}
-		*str = string(bytes)
-	})
+	if br.err != nil {
+		return br
+	}
+	bytes := make([]byte, 4)
+	_, err := br.reader.Read(bytes)
+	if err != nil {
+		br.err = err
+	}
+	*str = string(bytes)
+	return br
 }

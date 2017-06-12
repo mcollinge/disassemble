@@ -9,5 +9,4 @@ func TestJarFile(t *testing.T) {
 	if err != nil {
 		println(err)
 	}
-	//println(len(jarFile.Classes))
 }

@@ -47,10 +47,11 @@ jarReader:
 		unpacker := bit.NewReader(byteBuffer, binary.BigEndian)
 		classDef := definitions.ClassDefinition{}
 		err = classDef.Unpack(unpacker)
-		/*println(f.Name)
+		println(f.Name)
 		println(classDef.Magic)
 		println(classDef.Major)
-		println(classDef.ConstantPoolCount)*/
+		println(classDef.ConstantPoolCount)
+		println()
 
 	}
 	return nil, nil
