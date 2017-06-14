@@ -3,16 +3,15 @@ package disassemble
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/binary"
 	"fmt"
 	"strings"
 
-	"github.com/mcollinge/disassemble/bit"
 	"github.com/mcollinge/disassemble/definitions"
+	"github.com/mcollinge/disassemble/packing"
 )
 
 type JarFile struct {
-	//Classes []*ClassDefinition
+	Classes []*definitions.ClassDefinition
 }
 
 func Open(path string) (*JarFile, error) {
@@ -22,8 +21,8 @@ func Open(path string) (*JarFile, error) {
 	}
 	defer reader.Close()
 
-	//jarFile := &JarFile{}
-	//jarFile.Classes = []*ClassDefinition{}
+	jarFile := &JarFile{}
+	jarFile.Classes = make([]*definitions.ClassDefinition, 0)
 
 jarReader:
 	for _, f := range reader.File {
@@ -44,15 +43,12 @@ jarReader:
 		if read == 0 {
 			return nil, fmt.Errorf("Could not read file: %s", f.Name)
 		}
-		unpacker := bit.NewReader(byteBuffer, binary.BigEndian)
 		classDef := definitions.ClassDefinition{}
-		err = classDef.Unpack(unpacker)
-		println(f.Name)
-		println(classDef.Magic)
-		println(classDef.Major)
-		println(classDef.ConstantPoolCount)
-		println()
-
+		err = packing.Unpack(byteBuffer, &classDef)
+		if err != nil {
+			return nil, err
+		}
+		jarFile.Classes = append(jarFile.Classes, &classDef)
 	}
-	return nil, nil
+	return jarFile, nil
 }

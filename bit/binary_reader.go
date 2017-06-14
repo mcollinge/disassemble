@@ -1,30 +1,36 @@
 package bit
 
 import (
-	"bufio"
 	"encoding/binary"
 	"io"
+	"io/ioutil"
 )
 
 type BinaryReader struct {
-	reader *bufio.Reader
+	bytes  []byte
+	index  int
 	endian binary.ByteOrder
 	err    error
 }
 
-func NewReader(reader io.Reader, endian binary.ByteOrder) *BinaryReader {
-	return &BinaryReader{reader: bufio.NewReader(reader), endian: endian, err: nil}
+func NewReader(reader io.Reader, endian binary.ByteOrder) (*BinaryReader, error) {
+	bytes, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+	return &BinaryReader{bytes: bytes, index: 0, endian: endian, err: nil}, nil
 }
 
-func (br *BinaryReader) Finish() error {
+func (br *BinaryReader) Error() error {
 	return br.err
 }
 
-func (br *BinaryReader) Byte(b *byte) *BinaryReader {
+func (br *BinaryReader) Uint8(i *uint8) *BinaryReader {
 	if br.err != nil {
 		return br
 	}
-	*b, br.err = br.reader.ReadByte()
+	*i = br.bytes[br.index]
+	br.index += 1
 	return br
 }
 
@@ -32,11 +38,8 @@ func (br *BinaryReader) Uint16(i *uint16) *BinaryReader {
 	if br.err != nil {
 		return br
 	}
-	bytes := make([]byte, 2)
-	_, err := br.reader.Read(bytes)
-	if err != nil {
-		br.err = err
-	}
+	bytes := br.bytes[br.index : br.index+2]
+	br.index += 2
 	*i = br.endian.Uint16(bytes)
 	return br
 }
@@ -45,13 +48,8 @@ func (br *BinaryReader) Uint32(i *uint32) *BinaryReader {
 	if br.err != nil {
 		return br
 	}
-	bytes := make([]byte, 4)
-	read, err := br.reader.Read(bytes)
-	println(read)
-	if err != nil {
-		println(err)
-		br.err = err
-	}
+	bytes := br.bytes[br.index : br.index+4]
+	br.index += 4
 	*i = br.endian.Uint32(bytes)
 	return br
 }
@@ -60,11 +58,8 @@ func (br *BinaryReader) Uint64(i *uint64) *BinaryReader {
 	if br.err != nil {
 		return br
 	}
-	bytes := make([]byte, 4)
-	_, err := br.reader.ReadBytes(8)
-	if err != nil {
-		br.err = err
-	}
+	bytes := br.bytes[br.index : br.index+8]
+	br.index += 8
 	*i = br.endian.Uint64(bytes)
 	return br
 }
@@ -73,11 +68,18 @@ func (br *BinaryReader) String(i uint16, str *string) *BinaryReader {
 	if br.err != nil {
 		return br
 	}
-	bytes := make([]byte, 4)
-	_, err := br.reader.Read(bytes)
-	if err != nil {
-		br.err = err
-	}
+	bytes := br.bytes[br.index : br.index+int(i)]
+	br.index += int(i)
 	*str = string(bytes)
+	return br
+}
+
+func (br *BinaryReader) Bytes(bytes *[]byte) *BinaryReader {
+	if br.err != nil {
+		return br
+	}
+	length := len(*bytes)
+	*bytes = br.bytes[br.index : br.index+length]
+	br.index += length
 	return br
 }

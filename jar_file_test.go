@@ -5,8 +5,10 @@ import (
 )
 
 func TestJarFile(t *testing.T) {
-	_, err := Open("D:\\Programming\\Java\\java-applet-macro\\JAM.jar")
+	jar, err := Open("D:\\Programming\\Java\\java-applet-macro\\JAM.jar")
 	if err != nil {
 		println(err)
 	}
+	length := len(jar.Classes)
+	println(length)
 }
